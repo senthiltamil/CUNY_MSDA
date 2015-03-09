@@ -1,0 +1,106 @@
+---
+title: "Week6Assignment"
+output: html_document
+---
+
+##Non-graphical representation of numerical data
+
+Install necessary packages
+```{r}
+#install.packages("ggplot2")
+require(ggplot2)
+```
+
+
+1.a) Load demographic data from file. 
+
+```{r}
+file.path <- '/temp/demographicdata.csv'
+demographic.data <- read.table(file.path, header=TRUE,sep=",")
+```
+
+1.b) structure of demographic data  is 
+
+```{r}
+# School.Name and School.Year are factors
+# Grade.1, Grade.2, Grade.3, Grade.4 and Grade.5 are numerical variables.
+str(demographic.data)
+```
+
+1.c) Top 15 rows to show the sample of data
+
+```{r}
+head(demographic.data, n=15)
+```
+
+1.d) Last 15 rows to show the sample of data
+
+```{r}
+tail(demographic.data, n=15)
+```
+
+2. Statistical Summary of data
+
+```{r}
+summary(demographic.data)
+```
+
+
+3. Frequency by School Name
+
+```{r}
+table(demographic.data$School.Name)
+```
+
+4. Frequency by School Year over School Name
+
+```{r}
+table(demographic.data$School.Year, demographic.data$School.Name)
+```
+
+-> sum of enrollment by School Year
+
+```{r}
+aggregate((Grade.1 + Grade.2 + Grade.3 + Grade.4 + Grade.5) ~ School.Year, data=demographic.data, sum)
+```
+
+-> sum of enrollment by  School Name
+
+```{r}
+aggregate((Grade.1 + Grade.2 + Grade.3 + Grade.4 + Grade.5) ~ School.Name, data=demographic.data, sum)
+```
+
+##Graphical representation of numerical data
+
+5) Create different kinds of graphs for Grade1 data (single numeric value)
+
+5.a) boxplot function from base r package
+
+```{r}
+boxplot(demographic.data$Grade.1)
+```
+
+5.a) histogram function from base r package
+
+```{r}
+hist(demographic.data$Grade.1)
+```
+
+5.c) qplot  function from ggplot2 package 
+
+```{r}
+qplot(demographic.data$Grade.1)
+```
+
+6) Create scatterplot graph for Grade1 and Grade2 data (Two numeric values)
+
+6.a) Plot function from base r package
+
+```{r}
+plot(demographic.data$Grade.1 ~ demographic.data$Grade.2)
+```
+
+6.b) qplot function from ggplot2 package
+```{r}
+qplot(Grade.1, Grade.2, data=demographic.data)
+```
