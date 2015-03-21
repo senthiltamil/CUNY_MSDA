@@ -1,0 +1,74 @@
+---
+title: "Week7_8Assignment"
+author: "Senthil Dhanapal"
+date: "Thursday, March 19, 2015"
+output: html_document
+---
+
+###Load necessary packages
+```{r}
+#install.packages("tidyr")
+library(tidyr)
+library(dplyr)
+
+```
+
+
+###1. Write down 3 questions that you might want to answer based on this data
+#### a) How many people participated in the poll per city?
+#### b) How many people voted yes in each city that are under 25?
+#### c) How many people 25+ participated in the poll?
+
+###2. Create an R data frame with 2 observations to store this data in its current "messy" state. Use whatever method you want to re-create and/or load the data.
+```{r}
+v.1 <- c("Edin.1624.Y","Edin.1624.N","Edin.25.Y","Edin.25.N","Glasgow.1624.Y","Glasgow.1624.N","Glasgow.25.Y","Glasgow.25.N")
+v.2 <- c(80100,35900,143000,214800,99400,43000,150400,207000)
+
+df.polldata <-data.frame(v.1,v.2)
+names(df.polldata) <- c("Info","VoteCount")
+```
+
+
+###3. Use the functionality in the tidyr package to convert the data frame to be "tidy data."
+```{r}
+
+df.tidyr1 <- separate(df.polldata, Info, into = c("City", "Under25", "VotedYN"), sep = "\\.")
+
+df.tidyr1$Under25[df.tidyr1$Under25=="1624"] <- "y"
+df.tidyr1$Under25[df.tidyr1$Under25=="25"] <- "n"
+
+df.tidyr1$VotedYN[df.tidyr1$VotedYN=="Y"] <- "y"
+df.tidyr1$VotedYN[df.tidyr1$VotedYN=="N"] <- "n"
+
+```
+
+###4. Use the functionality in the dplyr package to answer the questions that you asked in step 1
+```{r}
+
+df.tidyr1 %>% 
+  group_by(City) %>% 
+  summarise(
+    Participants = sum(VoteCount)
+    )
+
+
+df.tidyr1 %>% 
+  filter(Under25=="y") %>% 
+  group_by(City) %>% 
+  summarise(
+    Under25 = sum(VoteCount)
+  )
+
+
+
+df.tidyr1 %>% 
+  filter(Under25=="n") %>% 
+  summarise(
+    Above25 = sum(VoteCount)
+  )
+
+
+```
+
+###5. Having gone through the process, would you ask different questions and/or change the way that you structured your data frame?
+#### Since the dataset is really small, there cannot be lot of questions except asking about data slicing and dicing on few fields. But overall transforming data from wide format to long format makes sense for easy reporting and charting.
