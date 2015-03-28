@@ -1,0 +1,32 @@
+<books>
+	<book name="SQL Server Internals: In-Memory OLTP Inside the SQL Server 2014 Hekaton Engine" ISBN-10="1910035033" ISBN-13="978-1910035030">
+		<authors>
+			<author>Kalen Delaney</author>
+		</authors>
+		<price>26.99</price>
+		<kindleAvailable>yes</kindleAvailable>
+		<KindlePrice>9.99</KindlePrice>
+	</book>
+
+	<book name="Professional Microsoft SQL Server 2014 Administration" ISBN-10="1118859138" ISBN-13="978-1118859131">
+		<authors>
+			<author>Adam Jorgensen</author>
+			<author>Bradley Ball</author>
+			<author>Steven Wort</author>
+			<author>Ross LoForte</author>
+			<author>Brian Knight</author>
+		</authors>
+		<price>36.58</price>
+		<kindleAvailable>yes</kindleAvailable>
+		<KindlePrice>31.49</KindlePrice>
+	</book>
+
+	<book name="Probability and Random Variables: A Beginner's Guide" ISBN-10="0521644453" ISBN-13="978-0521644457">
+		<authors>
+			<author>David Stirzaker</author>
+		</authors>
+		<price>50.47</price>
+		<kindleAvailable>no</kindleAvailable>
+		<KindlePrice>0</KindlePrice>
+	</book>
+</books>

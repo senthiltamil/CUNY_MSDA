@@ -1,0 +1,48 @@
+{
+	"books":
+	[
+		{
+			"name":"SQL Server Internals: In-Memory OLTP Inside the SQL Server 2014 Hekaton Engine",
+			"isbn-10":"1910035033",
+			"isbn-13":"978-1910035030",
+			"authors":
+			[
+				"Kalen Delaney"
+			],
+			"price":26.99,
+			"kindleAvailable":"yes",
+			"kindlePrice":"9.99"
+		},
+
+		{
+			"name":"Professional Microsoft SQL Server 2014 Administration",
+			"isbn-10":"1910035033",
+			"isbn-13":"978-1910035030",
+			"authors":
+			[
+				"Adam Jorgensen",
+				"Bradley Ball",
+				"Steven Wort",
+				"Ross LoForte",
+				"Brian Knight"
+			],
+			"price":36.58,
+			"kindleAvailable":"yes",
+			"kindlePrice":"31.49"
+		},
+
+		{
+			"name":"Probability and Random Variables: A Beginner's Guide",
+			"isbn-10":"0521644453",
+			"isbn-13":"978-0521644457",
+			"authors":
+			[
+				"David Stirzaker"
+			],
+			"price":50.47,
+			"kindleAvailable":"no"
+		}
+
+		
+	]
+}
