@@ -1,0 +1,77 @@
+---
+title: "Week9 Assignment"
+author: "Senthil Dhanapal"
+date: "Saturday, March 28, 2015"
+output: html_document
+---
+
+### I tried to access raw version of my files from github to load it directly from a remote server but my computer had issues with some certificates. I tried to address it but I couldn't resolve it. So, I put the code as comment.
+
+### load required packages
+```{r, echo=FALSE, warning=FALSE}
+#install.packages("XML")
+#install.packages("RCurl")
+#install.packages("plyr")
+#install.packages("jsonlite")
+library(XML)
+library(plyr)
+#library(RCurl)
+library(jsonlite)
+library(dplyr)
+
+
+```
+
+
+### books.html with a "field=value" format
+```{r}
+
+books.html.url <- "C:/Senthil/MSDataAnalytics/Semester1/Assignments/IS607/Week9Assignment/books.html"
+#books.html.url <- getURL("https://raw.githubusercontent.com/senthiltamil/CUNY_MSDA/master/Week9_Assignment/books.html")
+books.html.data <- readHTMLTable(books.html.url,header = F)
+books.html.data.df <- as.data.frame(books.html.data)
+str(books.html.data.df)
+print(books.html.data.df)
+
+```
+
+
+### books.html with a table-row format
+```{r}
+
+#books.html.url <- getURL("https://raw.githubusercontent.com/senthiltamil/CUNY_MSDA/master/Week9_Assignment/books1.html")
+books1.html.url <- "C:/Senthil/MSDataAnalytics/Semester1/Assignments/IS607/Week9Assignment/books1.html"
+books1.html.data <- readHTMLTable(books1.html.url,header = T)
+books1.html.data.df <- as.data.frame(books1.html.data)
+str(books1.html.data.df)
+print(books1.html.data.df)
+
+```
+
+
+### books.xml 
+```{r}
+#books.html.url <- getURL("https://raw.githubusercontent.com/senthiltamil/CUNY_MSDA/master/Week9_Assignment/books.xml")
+books.xml.url <- "C:/Senthil/MSDataAnalytics/Semester1/Assignments/IS607/Week9Assignment/books.xml"
+books.xml.data <- xmlParse(books.xml.url)
+books.xml.list <- xmlToList(books.xml.data)
+books.xml.df <- ldply(books.xml.list, data.frame)
+str(books.xml.df)
+print(books.xml.df)
+
+```
+
+
+### books.json
+```{r}
+#books.html.url <- getURL("https://raw.githubusercontent.com/senthiltamil/CUNY_MSDA/master/Week9_Assignment/books.json")
+books.json.url <- "C:/Senthil/MSDataAnalytics/Semester1/Assignments/IS607/Week9Assignment/books.json"
+books.json.data <- fromJSON(txt=books.json.url)
+books.json.df1 <- as.data.frame(books.json.data)
+str(books.json.df1)
+print(books.json.df1)
+
+
+```
+
+###Conclusion:- All these format resulted in slightly different format of data frames. Json format was the easiest one to translate to dataframe using R.
