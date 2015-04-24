@@ -1,0 +1,67 @@
+---
+title: "Week12Assignment"
+author: "Senthil Dhanapal"
+date: "Thursday, April 23, 2015"
+output: html_document
+---
+
+### I use rmongodb to read and display some information from local host mongo db. Data is inserted directly using mongo shell. There is a text file MongoDataManipulation.txt that shows the data manipulation commands and the test data
+
+## Install necessary packages and load them
+```{r, warning=FALSE}
+
+#install.packages("rmongodb")
+library(rmongodb)
+
+```
+
+## Connect to local host and check the connection status
+
+```{r}
+
+m<-mongo.create()
+mongo.is.connected(m)
+
+
+```
+
+## list the collection of databases 
+
+```{r}
+
+mongo.get.databases(m)
+
+```
+
+## Get a list of collection from the test db, where the data is stored.
+
+```{r}
+
+mongo.get.database.collections(m, db = "test")
+
+```
+
+
+## Get the count of documents in my collection
+```{r}
+
+ns <- "test.inventory"
+mongo.count(m, ns = ns)
+
+```
+
+
+
+## Get all the documents from the collections. 
+## Display the count of documents fetched
+## Display some information from the second document fetched
+```{r}
+
+
+find_all <- mongo.find.all(m, ns = ns)
+sprintf("Records count in the collection is %i", NROW(find_all))
+sprintf("For Item %s:- Manufacturer is %s and Category is %s", find_all[[2]]$item, find_all[[2]]$details$manufacturer, find_all[[2]]$category)
+
+
+```
+
