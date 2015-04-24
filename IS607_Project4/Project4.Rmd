@@ -1,0 +1,125 @@
+---
+title: "Project4"
+author: "Senthil Dhanapal"
+date: "Tuesday, April 21, 2015"
+output: html_document
+---
+### I am using rvest library to scrape "http://www.r-bloggers.com/search/web%20scraping" to collect Date, author and title information. As additional task, I am navigating through all the pages and getting Date, author and title information from all those pages also.
+
+
+### include necessary packages
+```{r, warning=FALSE, message=FALSE}
+#install.packages("rvest")
+library(rvest)
+library(stringr)
+library(dplyr)
+
+```
+
+
+
+### A function rbloggerscraper is used to get the Date, title and author information. It takes url and pageid as parameter. This function is useful as it comes handy when I am navigating through all the pages in the pagination list.
+
+
+```{r}
+
+rbloggerscraper <- function(url, pageid)
+{
+  df.scrapedinfo <- data.frame(pageid=numeric(0), blogdate=character(),author=character(),title=character())
+  rbloggerpage<-html(url)
+  leftcontent <- rbloggerpage %>% html_nodes("#leftcontent") 
+  posts <- leftcontent %>% html_nodes(xpath="//div[starts-with(@id,'post-')]")
+  for(i in 1:length(posts))
+  {
+    blogdate <- html_nodes(posts[i],".meta .date") %>% html_text()
+    author <- html_nodes(posts[i],".meta a") %>% html_text()
+    title <- html_nodes(posts[i],"h2 a") %>% html_text()
+    df.scrapedinfo <- rbind(df.scrapedinfo, data.frame(pageid,blogdate,author,title))
+  }
+  return (df.scrapedinfo)
+}
+
+```
+
+
+### Get the data for the first page.
+```{r}
+df.result <- data.frame(pageid=numeric(0),blogdate=character(),author=character(),title=character())
+df.r <- rbloggerscraper("http://www.r-bloggers.com/search/web%20scraping",1)
+df.result <- rbind(df.result, df.r)
+
+```
+
+
+### Get the pagination information and get the lastpage number
+```{r}
+
+getLastPage<-function(url)
+{
+  pagination <- html(url) %>% html_nodes(".pagination")
+  lastpage <- html_nodes(pagination,"a") %>% .[[5]] %>% html_text() %>% as.numeric()
+  return(lastpage)
+}
+
+lastpage <- getLastPage("http://www.r-bloggers.com/search/web%20scraping")
+
+
+```
+
+
+### loop through pages from 2 to last page.
+```{r}
+scrapeRestOfPages <- function(partURL)
+{
+  df.r1 <- data.frame(pageid=numeric(0), blogdate=character(),author=character(),title=character())
+  for(i in 2:lastpage)
+  {
+    url <-  str_c(partURL,i,"/")
+    print(sprintf("Page number %i",i))
+    df.r <- rbloggerscraper(url,i)
+    df.r1 <- rbind(df.r1, df.r)
+    Sys.sleep(2)
+  }
+  return(df.r1)
+}
+
+
+df1 <- scrapeRestOfPages("http://www.r-bloggers.com/search/web%20scraping/page/")
+df.result <- rbind(df.result, df1)
+
+
+```
+
+
+###View the result data frame
+```{r}
+nrow(df.result)
+tbl_df(df.result)
+
+```
+
+
+###Trying another additional task scraping twitter search
+
+```{r}
+
+df.result <- data.frame(pageid=numeric(0),blogdate=character(),author=character(),title=character())
+df.r <- rbloggerscraper("http://www.r-bloggers.com/search/twitter",1)
+df.result <- rbind(df.result, df.r)
+
+lastpage <- getLastPage("http://www.r-bloggers.com/search/twitter")
+
+df1 <- scrapeRestOfPages("http://www.r-bloggers.com/search/twitter/page/")
+df.result <- rbind(df.result, df1)
+
+
+```
+
+
+```{r}
+
+nrow(df.result)
+tbl_df(df.result)
+
+```
+
