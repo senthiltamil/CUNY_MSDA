@@ -1,0 +1,441 @@
+---
+title: "IS607FinalProject"
+author: "Senthil Dhanapal"
+date: "Tuesday, May 19, 2015"
+output: html_document
+---
+
+#------------------------------------------------------------------------
+##Project description and details:
+
+##  Goal:- Predict students ability to pass and their grades based on certain variables and find which variable(s) is the best predictor
+
+##  Dataset used is Student which is downloaded from UCI Repository
+
+##  Student dataset has G3 variable, which is used for classifying Pass vs Fail and students grades into Fail, Sufficient, Satisfactory, Good and Excellent. These classifications will be predicted based on some independent variables.
+
+##  Predictors are :- 1) ParentStatus (living together or not) 2) MotherEducation (factors:- none, upto 4th grade, upto 9th grade, secondary education and higher education) 3) Traveltime to school 4) Romantic status of the student 5) G1 - score from test1 6) G2 - score from test2
+
+##  Different methods used :- 1) Linear regression 2) Decision Tree 3) Naive Bayes Method
+
+##  Linear regression is used on variables G1 and G2 individually to predict G3
+
+##  Decision tree is used on variables G1 and G2 together to predict pass-ability and Grades
+
+##  Naive Bayes method is used on categorical variables - ParentStatus, MotherEducation, TravelTime and Romantic Status to predict pass-ability and grades.
+
+
+#------------------------------------------------------------------------
+
+
+```{r, warning=FALSE, echo=FALSE, message=FALSE}
+#Include necessary libraries for this project
+
+library(rpart)
+#library(rattle)
+#library(rpart.plot)
+#library(RColorBrewer)
+library(tree)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+#Following packages needed for Naive's Bayes classification
+#install.packages('e1071', dependencies = TRUE)
+library(class)
+library(e1071) 
+
+#For decision tree
+#install.packages('Party')
+library("party")
+
+#For webscraping
+library(rvest)
+library(stringr)
+library(dplyr)
+
+
+
+```
+
+##Load students data
+```{r}
+
+students <- read.table("C:/Senthil/MSDataAnalytics/Semester1/Projects/IS607/FinalProject/student/student-mat.csv", header=TRUE,sep=";")
+
+
+```
+
+
+##Original Attributes info from UCI Repository website for R
+```{r}
+
+url <- "http://archive.ics.uci.edu/ml/datasets/Student+Performance#"
+studentsdspage<-html(url)
+scrapedhtml <- studentsdspage%>% html_nodes("p") %>% html_text()
+dsattributeinfo <- scrapedhtml[27]
+
+stringcollection <- strsplit(dsattributeinfo, split="\r")
+
+stringcollection[1]
+
+```
+
+
+##Remove unnecessary columns
+```{r}
+students <- students[,c(6,7,13,23,31,32,33)]
+
+```
+
+
+##- > Calculate Pass Or Fail variable 
+
+```{r}
+Pass <- ifelse(students$G3>9,'PASS','FAIL')
+students <- data.frame(students,Pass)
+
+```
+
+
+##- > Calculate Grade variable
+
+```{r}
+
+Grade <- ifelse(students$G3<=9,'FAIL','Pass')
+Grade <- ifelse(students$G3>=10 & students$G3<=11,'Sufficient',Grade)
+Grade <- ifelse(students$G3>=12 & students$G3<=13,'Satisfactory',Grade)
+Grade <- ifelse(students$G3>=14 & students$G3<=15,'Good',Grade)
+Grade <- ifelse(students$G3>=16 & students$G3<=20,'Excellent',Grade)
+students <- data.frame(students,Grade)
+
+
+```
+
+#------------------------------------------------------------------------
+#exploration of data
+#------------------------------------------------------------------------
+
+
+##dimensions
+```{r}
+dim(students)
+nrow(students)
+ncol(students)
+
+```
+
+##structure
+
+```{r}
+
+str(students)
+
+```
+
+##variable or column names
+
+```{r}
+names(students)
+
+
+```
+
+##Attributes
+
+```{r}
+
+attributes(students)
+
+```
+
+##First ten rows 
+
+```{r}
+
+students[1:10,]
+
+
+```
+
+##Variable distribution before necessary factorization
+
+```{r}
+
+summary(students)
+
+```
+
+
+##Factorize continuous predictor variables
+
+```{r}
+
+students$Medu <- factor(students$Medu)
+students$traveltime <- factor(students$traveltime)
+
+
+```
+
+
+##Variable distribution after necessary factorization
+
+```{r}
+
+summary(students)
+
+```
+
+
+##pie chart for pass
+```{r}
+
+pie(with(students, table(Pass)))
+
+```
+
+
+##pie chart for Grade 
+```{r}
+
+pie(with(students, table(Grade)))
+
+```
+
+
+##bar graph for Pass
+```{r}
+
+
+ggplot(students, aes(x = Pass)) + geom_bar(fill="#FF9999")
+
+```
+
+
+##bar graph for Grade 
+```{r}
+
+reordervect <- rep(0,nrow(students))
+reordervect[with(students, Grade == "Fail")] = 1
+reordervect[with(students, Grade == "Sufficient")] = 2
+reordervect[with(students, Grade == "Satisfactory")] = 3
+reordervect[with(students, Grade == "Good")] = 4
+reordervect[with(students, Grade == "Excellent")] = 5
+
+students$Grade = with(students, reorder(Grade, reordervect))
+rm(reordervect)
+
+ggplot(students, aes(x = Grade)) + geom_bar(fill="#FF9999") 
+```
+
+
+
+##statistical data of G3
+```{r}
+summary(with(students,G3))
+sprintf('variance is %f',var(with(students,G3)))
+sprintf('standard deviation is %f',sd(with(students,G3)))
+
+
+```
+
+##Histogram of G3
+```{r}
+#hist(with(students,G3), main='', xlab='Score', breaks=20)
+ggplot(students, aes(x=G3)) + geom_histogram(fill="#FF9999")
+
+```
+
+
+#------------------------------------------------------------------------
+#Predicting G3 using G1
+#------------------------------------------------------------------------
+
+##correllation between G1 and G3
+
+```{r}
+r <- cor(with(students,G1), with(students,G3))
+sprintf('Correlation between G1 and G3 is %f and coefficient of determination is %f',r, r^2)
+
+```
+
+
+##scatterplot of G1, G3
+
+```{r}
+
+#plot(with(students,G1), with(students,G3), xlab='G1', ylab='G3')
+ggplot(students, aes(x=G1,y=G3)) + geom_point() + geom_smooth(method="lm", se=FALSE)
+
+sprintf("G3 shows a positive correllation with G1")
+
+```
+
+
+
+##fit linear regression using G1 as predictor to predict G3
+```{r}
+
+fit <- with(students,lm(G3 ~ G1))
+fit
+attributes(fit)
+summary(fit)
+plot(fit)
+
+sprintf("Residual graph is random in nature suggesting linear regression is not a bad choice for this data")
+```
+
+
+#------------------------------------------------------------------------
+#Predicting G3 using G2
+#------------------------------------------------------------------------
+
+##correllation between G2 and G3
+
+```{r}
+r <- cor(with(students,G2), with(students,G3))
+sprintf('Correlation between G2 and G3 is %f and the coefficient of determination is %f',r, r^2)
+```
+
+
+##scatterplot of G2, G3
+
+```{r}
+
+#plot(with(students,G2), with(students,G3), xlab='G1', ylab='G3')
+ggplot(students, aes(x=G2,y=G3)) + geom_point() + geom_smooth(method="lm", se=FALSE)
+
+sprintf("G3 shows strong positive correllation with G2")
+```
+
+
+##fit linear regression using G2 as predictor to predict G3
+```{r}
+
+fit <- with(students,lm(G3 ~ G2))
+fit
+attributes(fit)
+summary(fit)
+plot(fit)
+
+sprintf("Residual graph is random in nature suggesting linear regression is not a bad choice for this data")
+
+```
+
+
+#------------------------------------------------------------------------
+#Predicting Pass and Fail using G1 + G2 using DecisionTree
+#------------------------------------------------------------------------
+
+
+```{r}
+formula <- Pass ~ G1 + G2
+tree <- ctree(formula, data=students)
+
+print(tree)
+plot(tree)
+plot(tree, type="simple")
+
+sprintf('Errors-on-predictions Matrix')
+table(predict(tree, newdata=students), students$Pass,dnn=c('Predicted','Actual'))
+
+df.confmatrix <- data.frame(table(predict(tree, newdata=students), students$Pass,dnn=c('Predicted','Actual')))
+
+
+data_long <- gather(df.confmatrix, Type, Status, Predicted:Actual)
+data_long <- data_long %>% group_by(Status,Type) %>% summarise(Frequency=sum(Freq))
+ggplot(data_long, aes(x=Status,y=Frequency,fill=Type)) + geom_bar(stat='identity', position='dodge') 
+
+
+```
+
+#------------------------------------------------------------------------
+#Predicting Grades using G1 + G2 using DecisionTree
+#------------------------------------------------------------------------
+
+
+```{r}
+formula <- Grade ~ G1 + G2
+tree <- ctree(formula, data=students)
+
+print(tree)
+plot(tree)
+plot(tree, type="simple")
+
+
+sprintf('Errors-on-predictions Matrix')
+table(predict(tree, newdata=students), students$Grade,dnn=c('Predicted','Actual'))
+
+df.confmatrix <- data.frame(table(predict(tree, newdata=students), students$Grade,dnn=c('Predicted','Actual')))
+
+
+data_long <- gather(df.confmatrix, Type, Status, Predicted:Actual)
+data_long <- data_long %>% group_by(Status,Type) %>% summarise(Frequency=sum(Freq))
+ggplot(data_long, aes(x=Status,y=Frequency,fill=Type)) + geom_bar(stat='identity', position='dodge') 
+
+```
+
+
+
+#------------------------------------------------------------------------
+#Predicting Pass and Fail using Naive Bayes Prediction
+#------------------------------------------------------------------------
+
+
+
+```{r}
+
+classifier<-naiveBayes(students[,1:4], students[,8]) 
+
+
+#table(predict(classifier, students[,1:4]), students[,8], dnn = c('Predicted','Actual'))
+
+
+sprintf('Errors-on-predictions Matrix')
+table(predict(classifier, students[,1:4]), students[,8], dnn = c('Predicted','Actual'))
+
+df.confmatrix <- data.frame(table(predict(classifier, students[,1:4]), students[,8], dnn = c('Predicted','Actual')))
+
+data_long <- gather(df.confmatrix, Type, Status, Predicted:Actual)
+data_long <- data_long %>% group_by(Status,Type) %>% summarise(Frequency=sum(Freq))
+ggplot(data_long, aes(x=Status,y=Frequency,fill=Type)) + geom_bar(stat='identity', position='dodge') 
+
+
+```
+
+
+#------------------------------------------------------------------------
+#Predicting Grades using Naive Bayes Prediction
+#------------------------------------------------------------------------
+
+
+```{r}
+
+classifier<-naiveBayes(students[,1:4], students[,9]) 
+
+
+
+sprintf('Errors-on-predictions Matrix')
+table(predict(classifier, students[,1:4]), students[,9], dnn = c('Predicted','Actual'))
+
+df.confmatrix <- data.frame(table(predict(classifier, students[,1:4]), students[,9], dnn = c('Predicted','Actual')))
+
+data_long <- gather(df.confmatrix, Type, Status, Predicted:Actual)
+data_long <- data_long %>% group_by(Status,Type) %>% summarise(Frequency=sum(Freq))
+ggplot(data_long, aes(x=Status,y=Frequency,fill=Type)) + geom_bar(stat='identity', position='dodge') 
+
+
+```
+
+
+#------------------------------------------------------------------------
+#Conclusion
+#------------------------------------------------------------------------
+
+## Linear regression showed strong relationship between G3 and G2. G1 also showed positive relationship but not as strong as G2. 
+
+## Decision tree prediction on the same dataset showed very less errors on predictions making G1 and G2 suitable for predicting Grades and Pass-ability of students
+
+## Naive Bayes method showed large errors on predictions. So, either the those four variables are not good predictors or Naive Bayes method is not a good predicting model for this dataset.
+
+## Based on all the analysis, G2 is the strongest predictor for G3, which in turn, for pass-ability and grades.
